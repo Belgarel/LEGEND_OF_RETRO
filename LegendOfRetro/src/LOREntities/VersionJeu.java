@@ -1,5 +1,5 @@
-package LOREntites;
-// Generated Apr 7, 2018 9:35:06 PM by Hibernate Tools 4.3.1
+package LOREntities;
+// Generated May 4, 2018 8:34:43 PM by Hibernate Tools 4.3.1
 
 
 
@@ -10,6 +10,7 @@ public class VersionJeu  implements java.io.Serializable {
 
 
      private Integer idVersionJeu;
+     private Console console;
      private Jeu jeu;
      private Zone zone;
      private String codeBarre;
@@ -20,7 +21,8 @@ public class VersionJeu  implements java.io.Serializable {
     public VersionJeu() {
     }
 
-    public VersionJeu(Jeu jeu, Zone zone, String codeBarre, String edition, float prix, int stock) {
+    public VersionJeu(Console console, Jeu jeu, Zone zone, String codeBarre, String edition, float prix, int stock) {
+       this.console = console;
        this.jeu = jeu;
        this.zone = zone;
        this.codeBarre = codeBarre;
@@ -35,6 +37,13 @@ public class VersionJeu  implements java.io.Serializable {
     
     public void setIdVersionJeu(Integer idVersionJeu) {
         this.idVersionJeu = idVersionJeu;
+    }
+    public Console getConsole() {
+        return this.console;
+    }
+    
+    public void setConsole(Console console) {
+        this.console = console;
     }
     public Jeu getJeu() {
         return this.jeu;
