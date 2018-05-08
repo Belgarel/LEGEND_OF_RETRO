@@ -18,12 +18,12 @@ package controleur;
 import bean.CodeBarreForm;
 import bean.Form;
 import bean.ProduitForm;
-import hibernateConfig.NewHibernateUtil;
+import hibernateConfig.HibernateUtil;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.Vector;
-import org.hibernate.Session;
+import org.hibernate.*;
 import vue.GUI;
 //import vue.Vue;
 
@@ -31,8 +31,14 @@ import vue.GUI;
  *
  * @author Adrien Marchand
  */
+
+
 public class Controleur
 {
+    /**
+     * la vue sera utilisé pour communiquer avec l'affichage
+     * le modele va preparer la sesion hibernate
+     */ 
     private GUI vue; //utilisé pour communiquer avec l'affichage
     private Session modele; //session hibernate
     
@@ -40,21 +46,31 @@ public class Controleur
     {
         init();
     }
+    
     /**
-     * Crée la vue et initialise la connection avec la base de données.
+     * Crée la vue et initialise la connection avec la base de données
+     * cette methode est utilisée pour initialiser "new Controleur",voir "le main"
+     * @throws InitException un message d'erreur si la session va échouer
+     *
      */
+    
     public void init() throws InitException
     {
         try {
-            this.modele = NewHibernateUtil.getSessionFactory().openSession();
+            this.modele = (HibernateUtil.getSessionFactory()).openSession();
+            this.vue = new GUI(this);
         }
         catch (ExceptionInInitializerError eiie)    {System.out.println("Erreur lors de l'initialisation du modèle.\n"
                 + eiie.getMessage());}
-        this.vue = new GUI(this);
     }
     
     /**
-     * Détermine, à partir d'un bean, quelle(s) requête(s) d'INSERT générer et exécuter.
+     * Détermine, à partir d'un bean, quelle(s) requête(s) d'INSERT va générer et va exécuter.
+     * @param form met en parametre un objet de la classe abstrait Form, voir le package bean
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre des données insufisantes
+     * @throws DonneeInvalideException si l'utilisateur n'utilise le type de variable requise
+     * @throws EnregistrementExistantException si la valeur entrée existe déja dans la base de donnes
+     * @return Rapport donc va etre utiliseé pour HQLRecherche,voir le constructeur Rapport
     */
     public Rapport creer(Form form)
             throws DonneesInsuffisantesException, DonneeInvalideException, EnregistrementExistantException
@@ -67,16 +83,26 @@ public class Controleur
             String type = f.getType();
             
             if ("Console".equals(type))
-                ret = creerVersionConsole(f.getCodeBarre(), f.getEdition(), f.getZone(),
-                        f.getPrix(), f.getStock(),
-                        f.getIdConsole(), f.getNom(),       //getNom() renvoie le nom de la CONSOLE, pas de la Version de la console
-                        f.getIdEditeur(), f.getEditeur());
+                ret = creerVersionConsole(
+                        f.getCodeBarre(), 
+                        f.getEdition(), 
+                        f.getZone(),
+                        f.getPrix(), 
+                        f.getStock(),
+                        f.getIdConsole(), 
+                        f.getNom(),       //getNom() renvoie le nom de la CONSOLE, pas de la Version de la console
+                        f.getIdEditeur(), 
+                        f.getEditeur());
             else if ("Jeu".equals(type))
-                ret = creerVersionJeu(f.getCodeBarre(),
-                        f.getEdition(), f.getZone(),
-                        f.getPrix(), f.getStock(),
-                        f.getIdJeu(), f.getNom(),       //getNom() renvoie le nom du JEU, pas de la Version du jeu
-                        f.getDescription(), stringToVector(f.getTags(), ','),
+                ret = creerVersionJeu(
+                        f.getCodeBarre(),
+                        f.getEdition(), 
+                        f.getZone(),
+                        f.getPrix(), 
+                        f.getStock(),
+                        f.getIdJeu(), 
+                        f.getNom(),       //getNom() renvoie le nom du JEU, pas de la Version du jeu
+                        f.getDescription(), stringToVector(/*f.getTags(),*/ "some string" ,','),
                         f.getIdConsole(), f.getPlateforme(),
                         f.getIdEditeur(), f.getEditeur());
         }
@@ -85,9 +111,16 @@ public class Controleur
         
         return ret;
     }
+    
     /**
      * Crée un fabricant. Assure l'unicité de l'enregistrement.
+     * @param rapport met en parametre une variable objet de type Rapport
+     * @param nomFabr met en parametre une variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de données insufisantes
+     * @throws EnregistrementExistantException si la valeur entrée existe deja dans la base de données
+     * @return Fabricant va retourner un objet de type Fabricant
     */
+    
     protected Fabricant creerFabricant(Rapport rapport, String nomFabr)
             throws DonneesInsuffisantesException, EnregistrementExistantException
     {
@@ -101,7 +134,7 @@ public class Controleur
             
         //création du fabricant
         Fabricant fabr = new Fabricant();
-        fabr.setNom(nomFabr);
+        fabr.setNomFabricant(nomFabr);
         
         //sauvegarde dans la base de données
         this.modele.beginTransaction();
@@ -111,9 +144,17 @@ public class Controleur
         rapport.addOperation(fabr.getIdFabricant(), Rapport.Table.FABRICANT, Rapport.Operation.CREER);
         return fabr;
     }
+    
     /**
      * Crée un éditeur. Assure l'unicité de l'enregistrement.
+     * @param rapport met en parametre une variable de type Rapport
+     * @param nomEditeur met en parametre une variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de données insufisantes
+     * @throws EnregistrementExistantException si la valeur entrée existe deja dans la base de données
+     * @return Editeur va retourner un objet de type Editeur
     */
+    
+    
     protected Editeur creerEditeur(Rapport rapport, String nomEditeur)
             throws DonneesInsuffisantesException, EnregistrementExistantException
     {
@@ -127,7 +168,7 @@ public class Controleur
             
         //création de l'éditeur
         Editeur ed = new Editeur();
-        ed.setNom(nomEditeur);
+        ed.setNomEditeur(nomEditeur);
         
         //sauvegarde dans la base de données
         this.modele.beginTransaction();
@@ -137,9 +178,17 @@ public class Controleur
         rapport.addOperation(ed.getIdEditeur(), Rapport.Table.EDITEUR, Rapport.Operation.CREER);
         return ed;
     }
-    /**
+    
+     /**
      * Crée un tag. Assure l'unicité de l'enregistrement.
+     * @param rapport met en parametre une variable objet de type Rapport
+     * @param tag met en parametre une variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre des données insufisantes
+     * @throws EnregistrementExistantException si la valeur entrée existe deja dans la base de données
+     * @return Tag va retourner un objet de type Tag
     */
+    
+    
     protected Tag creerTag(Rapport rapport, String tag)
             throws DonneesInsuffisantesException, EnregistrementExistantException
             //Remarque : si une erreur est renvoyée, la faute en revient à un développeur !
@@ -154,7 +203,7 @@ public class Controleur
         
         //création du tag
         Tag t = new Tag();
-        t.setLibelle(tag);
+        t.setLabelTag(tag);
         
         //sauvegarde dans la base de données
         this.modele.beginTransaction();
@@ -173,10 +222,25 @@ public class Controleur
 //        //TODO : on génère la requête pour créer l'enregistrement.
 //        rapport.addOperation(desc., Rapport.Table.DESCRIPTION, Rapport.Operation.CREER);
 //    }
+    
+    
+    
     /**
      * Crée un jeu et/ou son éditeur. Assure l'unicité de l'enregistrement.
      * Si l'éditeur est inexistant dans la base de données, un nouvel éditeur est ajouté à la volée. De même pour les tags.
+     * @param   rapport met en parametre une variable de type Rapport
+     * @param   nomJeu met en parametre une variable de type String
+     * @param   description met en parametre une variable de type String
+     * @param   tags met en parametre un vecteur de type String
+     * @param   idEditeur met en parametre une variable de type integer
+     * @param   nomEditeur met en parametre une variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de données insufisantes
+     * @throws EnregistrementExistantException si la valeur entre existe dejq dans la base de données
+     * @return Jeu va retourner un objet de type Jeu
      */
+    
+    
+    
     protected Jeu creerJeu(Rapport rapport, String nomJeu, String description, Vector<String> tags,
             int idEditeur, String nomEditeur) throws DonneesInsuffisantesException, EnregistrementExistantException
     {
@@ -203,9 +267,9 @@ public class Controleur
 
             //création de la console
             Jeu jeu = new Jeu();
-            jeu.setNom(nomJeu);
-            jeu.setEditeur(editeur);
-            jeu.setDescription(description);
+            jeu.setNomJeu(nomJeu);
+            //jeu.setEditeur(editeur);
+            jeu.setDescriptionJeu(description);
 
             //traitement des tags
             for (String tag : tags)
@@ -215,7 +279,7 @@ public class Controleur
                 if (t == null)
                     t = creerTag(rapport, tag);
 
-                jeu.getTags().add(t);
+                //jeu.getTags().add(t);
                 
                 rapport.addOperation(t.getIdTag(), Rapport.Table.DESCRIPTION, Rapport.Operation.CREER);
             }
@@ -232,6 +296,13 @@ public class Controleur
     /**
      * Crée une console et/ou son fabricant.
      * Si le fabricant est renseigné par un label inexistant dans la base de données, un nouveau fabricant est ajouté à la volée.
+     * @param   rapport met en parametre une variable de type Rapport
+     * @param   nomConsole met en parametre une une variable de type String
+     * @param   idFabr met en parametre une variable de type integer
+     * @param   nomFabr met en parametre une variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de données insufisantes
+     * @throws EnregistrementExistantException si la valeur entre existe deja dans la base de données
+     * @return  Console va retourner un objet de type Console
     */
     protected Console creerConsole(Rapport rapport, String nomConsole,
             int idFabr, String nomFabr) throws DonneesInsuffisantesException, EnregistrementExistantException
@@ -271,12 +342,28 @@ public class Controleur
             return cons;
         }
     }
-    /**
+    
+     /**
      * Crée une version d'une console et/ou la console elle-même et/ou son fabricant.
-     * Si un produit est créé, assure la validité du code barre ainsi que l'unicité de l'enregistrement.
+     * Si un produit est créé, il assure la validité du code barre ainsi que l'unicité de l'enregistrement.
      * Si la console est inexistante dans la base de données, une nouvelle console est ajoutée à la volée. Par transitivité, cela s'applique au fabricant. Ne met pas à jour le fabricant d'une console existante.
      * La zone renseignée doit déjà exister dans la base de données.
+     * @param cb met en parametre une variable de type String reprezent "code de barre"
+     * @param edition met en parametre variable de type String
+     * @param nomZone met en parametre variable de type String
+     * @param prix met en parametre variable de type float
+     * @param stock met en parametre variable de type integer
+     * @param idConsole met en parametre variable de type integer
+     * @param nomConsole met en parametre variable de type String
+     * @param idFabr met en parametre variable de type integer
+     * @param nomFabr met en parametre variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de données insufisantes
+     * @throws EnregistrementExistantException si la valeur entre existe dejq dans la base de données
+     * @throws DonneeInvalideException si l'utilisateur va rentrer des variables non conformes comme type
+     * @return Rapport une variable objet de type Rapport
     */
+    
+     
     protected Rapport creerVersionConsole(String cb, String edition, String nomZone,
             float prix, int stock,
             int idConsole, String nomConsole,
@@ -309,7 +396,7 @@ public class Controleur
             
             //on vérifie que la version de console n'existe pas déjà !
             Vector<VersionConsole> existe = chercherVersionsConsole(cb, edition,
-                    zone.getNom(), console.getNom(), console.getFabricant().getNom());
+                    zone.getNomZone(), console.getNom(), console.getFabricant().getNomFabricant());
             if (!(existe == null) && !existe.isEmpty())
                 throw new EnregistrementExistantException("Impossible de créer la version de console : cette dernière existe déjà.");
             
@@ -334,10 +421,27 @@ public class Controleur
     }
     /**
      * Crée une version d'un jeu et/ou le jeu lui-même et/ou son éditeur et/ou ses tags.
-     * Si un produit est créé, assure la validité du code barre ainsi que l'unicité de l'enregistrement.
+     * Si un produit est créé, il assure la validité du code barre ainsi que l'unicité de l'enregistrement.
      * Si le jeu est inexistant dans la base de données, un nouveau jeu est ajouté à la volée. Par transitivité, cela s'applique à l'éditeur et aux tags de ce nouveau jeu. Ne met pas à jour les tags et l'éditeur d'un jeu existant.
      * La zone renseignée doit déjà exister dans la base de données.
      * La console renseignée doit déjà exister dans la base de données.
+     * @param cb variable de type String
+     * @param edition met en parametre une variable de type String
+     * @param nomZone met en parametre une variable de type String
+     * @param prix met en parametre une variable de type float
+     * @param stock met en parametre une variable de type integer
+     * @param idJeu met en parametre une variable de type integer
+     * @param nomJeu met en parametre une variable de type String
+     * @param description met en parametre une variable de type String
+     * @param tags met en parametre un vecteur de type String
+     * @param idCons met en parametre une variable de type integer
+     * @param nomConsole met en parametre une variable de type String
+     * @param idEditeur met en parametre une variable de type integer
+     * @param nomEditeur met en parametre une variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre des données insufisantes
+     * @throws EnregistrementExistantException si la valeur entre existe deja dans la base de données
+     * @throws DonneeInvalideException si l'utilisateur va entrer des variables non conformes comme type
+     * @return Rapport un objet de type Rapport
     */
     protected Rapport creerVersionJeu(String cb, String edition, String nomZone,
             float prix, int stock,
@@ -381,7 +485,7 @@ public class Controleur
                 throw new DonneeInvalideException("Impossible de créer la version de jeu : le jeu renseigné n'existe pas.");
             
             //on vérifie que la version de jeu n'existe pas déjà !
-            Vector<VersionJeu> existante = chercherVersionsJeu(cb, edition, zone.getNom(), console.getNom(), nomJeu, nomEditeur, tags);
+            Vector<VersionJeu> existante = chercherVersionsJeu(cb, edition, zone.getNomZone(), console.getNom(), nomJeu, nomEditeur/*, tags*/);
             if (!(existante == null) && !existante.isEmpty())
                 throw new EnregistrementExistantException("Impossible de créer la version de jeu : cette dernière existe déjà.");
             
@@ -390,7 +494,7 @@ public class Controleur
             vj.setCodeBarre(cb);
             vj.setEdition(edition);
             vj.setZone(zone);
-            vj.setConsole(console);
+            //vj.setConsole(console);
             vj.setJeu(jeu);
             vj.setPrix(prix);
             vj.setStock(stock);
@@ -409,6 +513,11 @@ public class Controleur
     /**
      * Détermine, à partir d'un bean, quelle(s) requête(s) de recherche générer et exécuter. Transforme les résultats en formulaires.
      * Les formulaires renvoyés correspondront à des produits : nommément, soit à une version de jeu, soit à une version de console.
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de donnes insufisantes
+     * @throws ResultatInvalideException si le resultat affiché n'est pas conforme
+     * @throws DonneeInvalideException si l'utilisateur va entrer des variables non conformes comme type
+     * @param  form met en parametre une variable objet de type Form
+     * @return Vecteur( un vecteur de type  générique)retourne un vecteur des objets de type ProduitForm 
     */
     public Vector<ProduitForm> chercher(Form form) throws DonneeInvalideException, ResultatInvalideException, DonneesInsuffisantesException
     {
@@ -417,23 +526,22 @@ public class Controleur
         if (form instanceof CodeBarreForm) //recherche rapide par code barre
         {
             String cb = codeBarreValide(((CodeBarreForm) form).getCodeBarre());
-System.out.println("Codebarreform CB : " + cb);
             for (VersionConsole enr : chercherVersionsConsole(cb, "", "", "", ""))
                 ret.add(new ProduitForm(
                         enr.getConsole().getIdConsole(), enr.getIdVersionConsole(), -1, -1,
                         enr.getConsole().getFabricant().getIdFabricant(), "Console",
                         enr.getCodeBarre(), enr.getConsole().getNom(),
-                        enr.getEdition(), enr.getZone().getNom(),
-                        enr.getConsole().getFabricant().getNom(), "", "", "",
-                        enr.getPrix(), enr.getStock()));//*/
-            for (VersionJeu enr : chercherVersionsJeu(cb, "", "", "", "", "", new Vector<String>()))
+                        enr.getEdition(), enr.getZone().getNomZone(),
+                        enr.getConsole().getFabricant().getNomFabricant(), "", "",
+                        enr.getPrix(), enr.getStock()));
+            for (VersionJeu enr : chercherVersionsJeu(cb, "", "", "", "", ""/*new Vector<String>()*/))
                 ret.add(new ProduitForm(
-                        enr.getConsole().getIdConsole(), -1,
+                        /*enr.getConsole().getIdConsole(),*/1, -1,
                         enr.getJeu().getIdJeu(), enr.getIdVersionJeu(),
                         enr.getJeu().getEditeur().getIdEditeur(), "Jeu",
-                        enr.getCodeBarre(), enr.getJeu().getNom(), enr.getEdition(), enr.getZone().getNom(),
-                        enr.getJeu().getEditeur().getNom(), enr.getJeu().getDescription(),
-                        tagsToString(enr.getJeu().getTags(), ','), enr.getConsole().getNom(),
+                        enr.getCodeBarre(), enr.getJeu().getNomJeu(), enr.getEdition(), enr.getZone().getNomZone(),
+                        enr.getJeu().getNomJeu(), enr.getJeu().getDescriptionJeu(),
+                        /*tagsToString(enr.getJeu().getTags(), ','),*/ enr.getConsole().getNom(),
                         enr.getPrix(), enr.getStock()));
             if (ret.size() > 1)
                 throw new ResultatInvalideException("Erreur : la recherche du code barre " + cb
@@ -451,8 +559,8 @@ System.out.println("Codebarreform CB : " + cb);
             String edition = f.getEdition();
             String zone = f.getZone();
             String editeur = f.getEditeur();
-            //String description = f.getDescription();      La description n'est pas un critère de recherche viable.
-            Vector<String> tags = stringToVector(f.getTags(), ',');
+            String description = f.getDescription();      //La description n'est pas un critère de recherche viable.
+            //Vector<String> tags = stringToVector(f.getTags(), ',');
             String plateforme = f.getPlateforme();
             //Pas besoin de récupérer les identifiants, la description de jeu, le prix et le stock.
 System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + nom + " EDITION : " + edition + " EDITEUR : " + editeur + " ZONE : " + zone + " PF : " + plateforme);
@@ -464,71 +572,77 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
                     ret.add(new ProduitForm(
                             enr.getConsole().getIdConsole(), enr.getIdVersionConsole(), -1, -1,
                             enr.getConsole().getFabricant().getIdFabricant(), "Console",
-                            enr.getCodeBarre(), enr.getConsole().getNom(), enr.getEdition(), enr.getZone().getNom(),
-                            enr.getConsole().getFabricant().getNom(), "", "", "",
+                            enr.getCodeBarre(), enr.getConsole().getNom(), enr.getEdition(), enr.getZone().getNomZone(),
+                            enr.getConsole().getFabricant().getNomFabricant(), "", "",
                             enr.getPrix(), enr.getStock()));
                 else
                     throw new DonneesInsuffisantesException("Données insuffisantes pour lancer une recherche.");
             }
             else if ("Jeu".equals(type))
             {
-                if (!"".equals(cb) || !"".equals(nom) || !"".equals(editeur) || !tags.isEmpty())
-                    for (VersionJeu enr : chercherVersionsJeu(cb, edition, zone, plateforme, nom, editeur, tags))
+                if (!"".equals(cb) || !"".equals(nom) || !"".equals(editeur) /*|| !tags.isEmpty()*/)
+                    for (VersionJeu enr : chercherVersionsJeu(cb, edition, zone, plateforme, nom, editeur/*, tags*/))
                         ret.add(new ProduitForm(
                                 enr.getConsole().getIdConsole(), enr.getConsole().getIdConsole(),
                                 enr.getJeu().getIdJeu(), enr.getIdVersionJeu(),
                                 enr.getJeu().getEditeur().getIdEditeur(), "Jeu",
-                                enr.getCodeBarre(), enr.getJeu().getNom(), enr.getEdition(), enr.getZone().getNom(),
-                                enr.getJeu().getEditeur().getNom(), enr.getJeu().getDescription(),
-                                tagsToString(enr.getJeu().getTags(), ','), enr.getConsole().getNom(),
+                                enr.getCodeBarre(), enr.getJeu().getNomJeu(), enr.getEdition(), enr.getZone().getNomZone(),
+                                enr.getJeu().getNomJeu(), enr.getJeu().getDescriptionJeu(),
+                                //tagsToString(enr.getJeu().getTags(), ','), enr.getConsole().getNom(),
                                 enr.getPrix(), enr.getStock()));
                 else
                     throw new DonneesInsuffisantesException("Données insuffisantes pour lancer une recherche.");
             }
         }
-        
         return ret;
     }
     /**
      * Recherche les versions de consoles dont le code barre, l'édition, la zone et le fabricant correspondent parfaitement aux données renseignées,
      * et dont le nom contient la chaîne renseignée.
      * La zone et l'édition ne sont pas suffisantes pour lancer une recherche.
+     * @param cb met en parametre une variable String
+     * @param edition met en parametre une variable String
+     * @param zone met en parametre une variable String
+     * @param nomemet en parametre une variable String
+     * @param fabricant met en parametre une variable String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de données insufisantes
+     * @throws EnregistrementExistantException si la valeur entre existe deja dans la base de données
+     * @throws DonneeInvalideException si l'utilisateur va rentrer des variable non conformes comme type
+     * @return Vector retourne un vecteur des objets de type VersionConsole
      */
     private Vector<VersionConsole> chercherVersionsConsole(String cb, String edition, String zone, String nom, String fabricant)
             throws DonneesInsuffisantesException, DonneeInvalideException
-    {
-        
+    {        
         if ("".equals(cb) && "".equals(nom) && "".equals(fabricant))
             throw new DonneesInsuffisantesException("Erreur lors de la recherche des produits de type console : il faut renseigner un code barre, un nom, ou un fabricant.");
         
         Vector<VersionConsole> ret = new Vector<VersionConsole>();
         
-        HQLRecherche q = new HQLRecherche("VersionConsole vc"); //TODO: requête imbriquée imbrCons
+        HQLRecherche q = new HQLRecherche("LOREntities.VersionConsole vc"); //TODO: requête imbriquée imbrCons
         //rédaction de la requête imbriquée pour console
         if (!"".equals(nom) || !"".equals(fabricant)) //si la console est renseignée (et/ou son fabricant)
         {
-            HQLRecherche imbrCons = new HQLRecherche("console c");
+            HQLRecherche imbrCons = new HQLRecherche("LOREntities.Console c");
             imbrCons.setImbriquee(true);
+            imbrCons.setSelect("c.idConsole");
             imbrCons.addCondition("c.nom", nom, HQLRecherche.Operateur.LIKE);
             //rédaction de la requête imbriquée pour fabricant
             if (!"".equals(fabricant)) //si le fabricant est renseigné
             {
-                HQLRecherche imbrFabr = new HQLRecherche("fabricant f");
+                HQLRecherche imbrFabr = new HQLRecherche("LOREntities.Fabricant f");
                 imbrFabr.setImbriquee(true);
-                imbrFabr.addCondition("f.nom", fabricant, HQLRecherche.Operateur.LIKE);
-                
+                imbrFabr.addCondition("f.nomFabricant", fabricant, HQLRecherche.Operateur.LIKE);                
                 imbrCons.addCondition("c.fabricant", imbrFabr.toString(), HQLRecherche.Operateur.IN);
             }
-            
             q.addCondition("vc.console", imbrCons.toString(), HQLRecherche.Operateur.IN);
         }
         //rédaction des requêtes imbriquées pour zone
         if (!"".equals(zone)) //si la zone est renseignée
         {
-            HQLRecherche imbrZone = new HQLRecherche("zone z");
+            HQLRecherche imbrZone = new HQLRecherche("LOREntities.Zone z");
             imbrZone.setImbriquee(true);
-            imbrZone.addCondition("z.nom", zone, HQLRecherche.Operateur.EGAL);
-            
+            imbrZone.setSelect("z.idZone");
+            imbrZone.addCondition("z.nomZone", zone, HQLRecherche.Operateur.LIKE);            
             q.addCondition("vc.zone", imbrZone.toString(), HQLRecherche.Operateur.IN);
         }
         //autres conditions
@@ -547,32 +661,77 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
      * Recherche les versions de consoles dont le code barre, l'édition, la zone et le fabricant correspondent parfaitement aux données renseignées,
      * et dont le nom contient la chaîne renseignée.
      * La zone et l'édition ne sont pas suffisantes pour lancer une recherche.
+     * @param cb met en parametre une variable String
+     * @param edition met en parametre une variable String
+     * @param zone met en parametre une variable String
+     * @param plateforme cb met en parametre une variable String
+     * @param nom met en parametre une variable String
+     * @param editeur met en parametre une variable String
+     * @return un vecteur de type VersionJeu  
      */
     private Vector<VersionJeu> chercherVersionsJeu(String cb, String edition, String zone,
-            String plateforme, String nom, String editeur, Vector<String> tags)
+            String plateforme, String nom, String editeur/*, Vector<String> tags*/)
             throws DonneesInsuffisantesException
     {
-        if ("".equals(cb) && "".equals(plateforme) && "".equals(nom) && "".equals(editeur) && tags.isEmpty())
+         //from LOREntities.VersionConsole vc where vc.console in (select c.idConsole from LOREntities.Console c where c.nom LIKE '%%' and c.fabricant in ( from LOREntities.Fabricant f where f.nom LIKE '%nintendo%' )  )  and vc.zone in (select z.idZone from LOREntities.Zone z where z.nom LIKE '%EU%' ) 
+
+        if ("".equals(cb) && "".equals(plateforme) && "".equals(nom) && "".equals(editeur) /*&& tags.isEmpty()*/)
             throw new DonneesInsuffisantesException("Erreur lors de la recherche des produits de type jeu : il faut renseigner un code barre, une plateforme, un nom, un éditeur ou au moins un tag.");
         
         Vector<VersionJeu> ret = new Vector<VersionJeu>();
         
         //TODO: la recherche à proprement parler.
+                HQLRecherche q = new HQLRecherche("LOREntities.VersionJeu vj"); //TODO: requête imbriquée imbrCons
+        //rédaction de la requête imbriquée pour console
+        if (!"".equals(nom) || !"".equals(plateforme)) //si la console est renseignée (et/ou son fabricant)
+        {
+            HQLRecherche imbrCons = new HQLRecherche("LOREntities.Console c");
+            imbrCons.setImbriquee(true);
+            imbrCons.setSelect("c.idConsole");
+            imbrCons.addCondition("c.nom", nom, HQLRecherche.Operateur.LIKE);
+            q.addCondition("vj.console", imbrCons.toString(), HQLRecherche.Operateur.IN);
+        }
+
+        //rédaction des requêtes imbriquées pour zone
+        if (!"".equals(zone)) //si la zone est renseignée
+        {
+            HQLRecherche imbrZone = new HQLRecherche("LOREntities.Zone z");
+            imbrZone.setImbriquee(true);
+            imbrZone.setSelect("z.idZone");
+            imbrZone.addCondition("z.nom", zone, HQLRecherche.Operateur.LIKE);            
+            q.addCondition("vj.zone", imbrZone.toString(), HQLRecherche.Operateur.IN);
+        }
+        //autres conditions
+        if (!"".equals(cb))
+            q.addCondition("vj.codeBarre", cb, HQLRecherche.Operateur.EGAL);
+        if (!"".equals(edition))
+            q.addCondition("vj.edition", edition, HQLRecherche.Operateur.LIKE);
+        
+        System.out.println(q.toString()); //imprimé à des fins de test
+        List resultats = modele.createQuery(q.toString()).list();
+        ret.addAll(resultats);
         
         return ret;
     }
     /**
      * Recherche les consoles dont le nom correspond parfaitement à la chaîne renseignée et ayant le fabricant désigné.
+     * @param idConsole met en parametre une variable integer
+     * @param idFabr met en parametre une variable integer
+     * @param nomCons met en parametre une variable String
+     * @param nomFabr met en parametre une variable String
+     * @throws throws DonneesInsuffisantesException si l'utilisateur rentre de données insufisantes
+     * @return Console return un objet de type Console
      */
     private Console chercherConsole(int idConsole, int idFabr, String nomCons, String nomFabr) throws DonneesInsuffisantesException
     {
         if (idConsole < 0 && (nomCons == null || "".equals(nomCons)))
             throw new DonneesInsuffisantesException("Erreur lors de la recherche de la console : nom de la console non renseigné.");
 
-        HQLRecherche q = new HQLRecherche("Console c");
+        HQLRecherche q = new HQLRecherche("LOREntities.Console c");
         q.addCondition("c.nom", nomCons, HQLRecherche.Operateur.EGAL);
         if (!"".equals(nomFabr))
             q.addCondition("c.fabricant.nom", nomFabr, HQLRecherche.Operateur.EGAL);
+        System.out.println("Recherche Console"); //imprimé à des fins de test
         System.out.println(q.toString()); //imprimé à des fins de test
         List resultats = modele.createQuery(q.toString()).list();
         
@@ -613,6 +772,11 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
     }
     /**
      * Recherche les consoles dont le nom contient la chaîne renseignée et/ou ayant le fabricant désigné.
+     * @param idFabr met en parametre une variable integer
+     * @param nomCons met en parametre une variable String
+     * @param  nomFabr met en parametre une variable String
+     * @throws throws DonneesInsuffisantesException si l'utilisateur rentre de données insufisantes
+     * @return un vecteur de type Console
      */
     private Vector<Console> chercherConsoles(int idFabr, String nomCons, String nomFabr) throws DonneesInsuffisantesException
     {
@@ -627,6 +791,13 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
     }
     /**
      * Recherche le jeu dont le nom correspond parfaitement à la chaîne renseignée et ayant l'éditeur et les tags renseignés.
+     * @param idJeu met en parametre une variable integer
+     * @param idEditeur met en parametre une variable integer
+     * @param  nomJeu met en parametre une variable String
+     * @param tags met en parametetre un vecteur de type String
+     * @param  nomEditeur met en parametre une variable String
+     * @param  @throws throws DonneesInsuffisantesException si l'utilisateur va entrer de données insufisantes
+     * @return un objet de type Jeu
      */
     private Jeu chercherJeu(int idJeu, int idEditeur, String nomJeu,
             Vector<String> tags, String nomEditeur) throws DonneesInsuffisantesException
@@ -665,9 +836,17 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
         return resultat.firstElement();*/
         return null;
     }
+    
     /**
      * Recherche les jeux dont le nom contient la chaîne renseignée et/ou ayant l'éditeur désigné et/ou les tags renseignés.
+     * @param  idEditeur mettre un parametre une variable de type integer
+     * @param  nomCons mettre un parametre une variable de type String
+     * @param  nomEditeur mettre un parametre une variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de donnes insufisantes on va avoir une réponse specifique
+     * @return Vector retourne un vecteur de type Console
      */
+    
+       
     private Vector<Console> chercherJeux(int idEditeur, String nomCons, String nomEditeur) throws DonneesInsuffisantesException
     {
         if ((nomCons == null || "".equals(nomCons)) && idEditeur < 0 && (nomEditeur == null || "".equals(nomEditeur)))
@@ -680,9 +859,15 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
         //return ret;
         return null;
     }
+    
     /**
      * Recherche les fabricants dont le nom contient la chaîne renseignée.
+     * @param id une variable de type integer
+     * @param nomFabricant une variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur va rentrer de donnes insufisantes on va avoir une réponse specifique
+     * @return Fabricant returne un objet de type Fabricant
      */
+      
     private Fabricant chercherFabricant(int id, String nomFabr) throws DonneesInsuffisantesException
     {
         if (id < 0 && (nomFabr == null || "".equals(nomFabr)))
@@ -698,9 +883,15 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
         else //on suppose qu'il n'y a qu'un seul résultat !
             return (Fabricant) resultats.get(0);
     }
+    
     /**
      * Recherche les fabricants dont le nom contient la chaîne renseignée.
+     * @param  nomFabr variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de donnes insufisantes on va avoir une réponse specifique
+     * @return Vector de objects de type Fabricant
      */
+    
+    
     private Vector<Fabricant> chercherFabricants(String nomFabr) throws DonneesInsuffisantesException
     {
         if (nomFabr == null || "".equals(nomFabr))
@@ -718,6 +909,10 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
     }
     /**
      * Recherche l'éditeur dont le nom correspond parfaitement à la chaîne renseignée.
+     * @param  id varable de type integer
+     * @param  nomEdit variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de donnes insufisantes on va avoir une réponse specifique
+     * @return  un objet de type Editeur
      */
     private Editeur chercherEditeur(int id, String nomEdit) throws DonneesInsuffisantesException
     {
@@ -736,6 +931,9 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
     }
     /**
      * Recherche les éditeurs dont le nom contient la chaîne renseignée.
+     * @return nomEdit este une varable type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de donnes insufisantes on va avoir une réponse specifique
+     *@return  Vector qui contien objets de type Editeur
      */
     private Vector<Editeur> chercherEditeurs(String nomEdit) throws DonneesInsuffisantesException
     {
@@ -754,6 +952,10 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
     }
     /**
      * Recherche une zone dans la base de données. Si la zone renseignée est trouvé, un objet Zone est renvoyé. Sinon, la méthode renvoie null.
+     * @param id mettre en parametre un integer
+     * @param zone mettre un parametre un String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de donnes insufisantes
+     * @return  Zone après le traitement returne un objet de type Zone
      */
     private Zone chercherZone(int id, String zone) throws DonneesInsuffisantesException
     {
@@ -772,6 +974,10 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
     }
     /**
      * Recherche un tag dans la base de données. Si le tag renseigné est trouvé, un objet Tag est renvoyé. Sinon, la méthode renvoie null.
+     * @param tag une variable de type String
+     * @param id une variable de type integer
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de donnes insufisantes
+     * @return Tag va returne après le traitement un objet de type Tag
      */
     private Tag chercherTag(int id, String tag) throws DonneesInsuffisantesException
     {
@@ -791,7 +997,12 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
     
     /**
      * Crée une zone dans la table des zones.
-    */
+     * @param zone une variable de type String
+     * @throws DonneesInsuffisantesException si l'utilisateur rentre de donnes insufisantes
+     * @throws EnregistrementExistantException si la valeur entre existe deja dans la base de donnes
+     * @return Rapport retourne un objet de type Rapport
+     */
+     
     public Rapport creerZone(String zone)
             throws EnregistrementExistantException, DonneesInsuffisantesException
     {
@@ -807,7 +1018,7 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
         
         //création de la zone
         Zone z = new Zone();
-        z.setNom(zone);
+        z.setNomZone(zone);
         
         //sauvegarde dans la base de données
         this.modele.beginTransaction();
@@ -820,25 +1031,27 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
     }
     /**
      * Renvoie la liste des zones.
+     * @return Vector un vecteur d de type String
      */
     public Vector<String> listeZones()
     {
         Vector<String> ret = new Vector();
         
-        List zones = modele.createQuery("from Zone").list();
+        List zones = modele.createQuery("from LOREntities.Zone").list();
         for (Object z : zones)
-            ret.add(((Zone) z).getNom());
+            ret.add(((Zone) z).getNomZone());
         
         return ret;
     }
     /**
      * Renvoie la liste des consoles.
+     * @return Vector un vectuer de type String
      */
     public Vector<String> listeConsoles()
     {
         Vector<String> ret = new Vector();
         
-        List consoles = modele.createQuery("from Zone").list();
+        List consoles = modele.createQuery("from LOREntities.Console").list();
         for (Object c : consoles)
             ret.add(((Console) c).getNom());
         
@@ -847,8 +1060,8 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
     
     /**
      * Convertit une chaîne de 1 à 13 chiffres en code barre valides. Si le code barre fait moins de 13 chiffres, il est complété par des 0 à gauche.
-     * @param cb le code barre à vérifier.
-     * @return un code barre valide.
+     * @param cb le code barre à vérifier
+     * @return un code barre valide
      * @throws DonneeInvalideException le code barre renseigné n'est pas composé de 1 à 13 chiffres.
      */
     protected final String codeBarreValide(String cb)
@@ -861,10 +1074,9 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
         //on vérifie que l'entrée est légale
         String ret = "";
         if (cb.length() > 13)
-            throw new DonneeInvalideException("Veuillez entrer un code barre composé de 13 chiffres.");
+            throw new DonneeInvalideException("Veuillez entrer un code barre composé de 13 chiffres");
         else
-            try {
-                int test = new Integer(cb);}
+            try { long test = new Long(cb); }
             catch (NumberFormatException nfe) {
                 throw new DonneeInvalideException("Veuillez entrer un code barre composé de 13 chiffres.");
             }
@@ -873,17 +1085,19 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
         int missingCharacters = 13 - cb.length();
         for (int i = 0 ; i < missingCharacters ; i++)
             ret = ret.concat("0");
-        
         return ret.concat(cb);
     }
     /**
      * Transforme un vecteur de tags en un vecteur de strings pour l'affichage.
+     * @param separator une variable de type char
+     * @param tags une variable de type Set
+     * @return une variable de type String
      */
     protected static final String tagsToString(Set<Tag> tags, char separator)
     {
         Vector <String> vect = new Vector<String>();
         for (Tag t : tags)
-            vect.add(t.getLibelle());
+            vect.add(t.getLabelTag());
         return vectorToString(vect, separator);
     }
     protected static final Vector<String> stringToVector(String s, char separator)
@@ -924,6 +1138,11 @@ System.out.println("ProduitForm TYPE : " + type + " CB : " + cb + " NOM : " + no
     public static void main(String[] args)
     {
         try {
+            //magical - do not touch
+              /*@SuppressWarnings("unused")
+                org.jboss.logging.Logger logger = org.jboss.logging.Logger.getLogger("org.hibernate");
+                java.util.logging.Logger.getLogger("org.hibernate").setLevel(java.util.logging.Level.OFF); //or whatever level you need*/
+
             new Controleur();}
         catch (InitException ex) {
             System.out.println(ex.getMessage());}
