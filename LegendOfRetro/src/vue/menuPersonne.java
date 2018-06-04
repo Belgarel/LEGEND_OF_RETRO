@@ -7,6 +7,7 @@ package vue;
 
 import bean.Form;
 import bean.PersonneForm;
+import bean.ProduitForm;
 import controleur.Controleur;
 import controleur.DonneeInvalideException;
 import controleur.DonneesInsuffisantesException;
@@ -24,7 +25,7 @@ public class menuPersonne extends JPanel implements Chercheur
 {
     private Controleur controleur;
 
-    //private critPersonne Criteres;
+    private critPersonne Criteres;
 
     private Resultat<PersonneForm> Resultats;
 
@@ -42,17 +43,19 @@ public class menuPersonne extends JPanel implements Chercheur
     /**
      * Cette méthode est appelée depuis le constructeur pour initialiser le JPanel.
      * ATTENTION : cette fonction reprend du code généré par un JForm.
-     */                       
-    private void initComponents()
-    {
-        this.setSize(500, 560);
-
-        //this.Criteres = new critPersonne(this.controleur, this);
-        this.Resultats = new Resultat<PersonneForm>(this);
+     */      
+    
+    private void initComponents(){
+        this.setSize(500, 650);
+        
+        this.Criteres = new critPersonne(this.controleur, this);
+        this.Resultats = new Resultat<>(this);
+     
         
         this.setLayout(new BorderLayout());
-        //this.add(this.Criteres, BorderLayout.CENTER);
+        this.add(this.Criteres, BorderLayout.CENTER);
         this.add(this.Resultats, BorderLayout.SOUTH);
+
     }
     
     @Override

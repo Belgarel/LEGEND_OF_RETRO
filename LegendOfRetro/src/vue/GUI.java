@@ -41,7 +41,7 @@ public class GUI extends JFrame implements ActionListener
         
         //initialisation des composants
         menuPanel = new JPanel();
-        menuPanel.setPreferredSize(new java.awt.Dimension(150, 560));
+        menuPanel.setPreferredSize(new java.awt.Dimension(150, 650));
         
         buttonProduit = new JButton();
         buttonProduit.setText("Produit");
