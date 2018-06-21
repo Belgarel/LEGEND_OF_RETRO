@@ -259,6 +259,12 @@ public class Controleur
                 throw new DonneeInvalideException("Impossible de créer la ligne : le stock obtenu est négatif.");
             vc.setStock(nouveauStock);
             
+            try {
+                calculCote("Console",vc.getIdVersionConsole());
+            } catch (EnregistrementInexistantException ex) {
+                Logger.getLogger(Controleur.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
             if (nouveauStock < 0)
                 throw new DonneeInvalideException("Impossible de créer la ligne : le stock obtenu est négatif.");
             vc.setStock(nouveauStock);
@@ -309,6 +315,12 @@ public class Controleur
             if (nouveauStock < 0)
                 throw new DonneeInvalideException("Impossible de créer la ligne : le stock obtenu est négatif.");
             vj.setStock(nouveauStock);
+            
+            try {
+                calculCote("Jeu",vj.getIdVersionJeu());
+            } catch (EnregistrementInexistantException ex) {
+                Logger.getLogger(Controleur.class.getName()).log(Level.SEVERE, null, ex);
+            }
             
             modele.beginTransaction();
             modele.save(facture);
