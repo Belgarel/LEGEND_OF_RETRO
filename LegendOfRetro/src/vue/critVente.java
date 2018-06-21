@@ -13,10 +13,7 @@ import bean.Form;
 import bean.ProduitForm;
 import bean.PersonneForm;
 import controleur.Controleur;
-import controleur.DonneeInvalideException;
-import controleur.DonneesInsuffisantesException;
 import java.awt.Color;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SpinnerNumberModel;
@@ -66,7 +63,7 @@ public class critVente extends javax.swing.JPanel {
         buttonChercher = new javax.swing.JButton();
         buttonAjouter = new javax.swing.JButton();
         buttonSupprimer = new javax.swing.JButton();
-        buttonTerminer = new javax.swing.JButton();
+        buttonSuivant = new javax.swing.JButton();
         fieldCodeBarre = new javax.swing.JFormattedTextField();
 
         labelCodeBarre.setText("Code Barre : ");
@@ -112,10 +109,10 @@ public class critVente extends javax.swing.JPanel {
             }
         });
 
-        buttonTerminer.setText("Terminer");
-        buttonTerminer.addActionListener(new java.awt.event.ActionListener() {
+        buttonSuivant.setText("Suivant");
+        buttonSuivant.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonTerminerActionPerformed(evt);
+                buttonSuivantActionPerformed(evt);
             }
         });
 
@@ -132,39 +129,31 @@ public class critVente extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addComponent(labelEdition, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(labelZone, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(labelDevFab, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                            .addComponent(labelPlateforme, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addContainerGap(819, Short.MAX_VALUE))
-                        .addGroup(layout.createSequentialGroup()
-                            .addComponent(labelPrix)
-                            .addContainerGap(880, Short.MAX_VALUE)))
+                    .addComponent(labelEdition)
+                    .addComponent(labelZone)
+                    .addComponent(labelDevFab)
+                    .addComponent(labelPlateforme, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labelPrix)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(buttonAjouter)
+                        .addGap(18, 18, 18)
+                        .addComponent(buttonSupprimer)
+                        .addGap(41, 41, 41)
+                        .addComponent(buttonSuivant))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(buttonAjouter)
-                                .addGap(18, 18, 18)
-                                .addComponent(buttonSupprimer)
-                                .addGap(41, 41, 41)
-                                .addComponent(buttonTerminer))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(labelCodeBarre)
-                                    .addComponent(labelNom))
-                                .addGap(35, 35, 35)
-                                .addComponent(fieldCodeBarre, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(28, 28, 28)
-                                .addComponent(buttonChercher))
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(labelQuantite)
-                                    .addGap(18, 18, 18)
-                                    .addComponent(fieldQuantite, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addComponent(labelStock)))
-                        .addContainerGap(551, Short.MAX_VALUE))))
+                            .addComponent(labelCodeBarre)
+                            .addComponent(labelNom))
+                        .addGap(35, 35, 35)
+                        .addComponent(fieldCodeBarre, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(28, 28, 28)
+                        .addComponent(buttonChercher))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(labelQuantite)
+                        .addGap(18, 18, 18)
+                        .addComponent(fieldQuantite, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(labelStock))
+                .addContainerGap(551, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -196,7 +185,7 @@ public class critVente extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(buttonAjouter)
                     .addComponent(buttonSupprimer)
-                    .addComponent(buttonTerminer))
+                    .addComponent(buttonSuivant))
                 .addGap(12, 12, 12))
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -207,27 +196,29 @@ public class critVente extends javax.swing.JPanel {
     }//GEN-LAST:event_buttonChercherActionPerformed
 
     private void buttonAjouterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAjouterActionPerformed
-        this.parent.ajouterLigne(toForm());
+        try {
+            this.parent.ajouterLigne(toForm());}
+        catch (Exception ex)  {this.parent.afficherErreur(ex);}
         clean();
         buttonAjouter.setBackground(Color.GREEN);
     }//GEN-LAST:event_buttonAjouterActionPerformed
 
     private void buttonSupprimerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSupprimerActionPerformed
-        this.parent.supprimerLigne(toForm());
-         buttonSupprimer.setBackground(Color.GREEN);
+        if ("".equals(this.fieldCodeBarre))
+            this.parent.afficherErreur(new Exception("Veuillez entrer un code barre."));
+        else
+        {
+            this.parent.supprimerLigne(this.fieldCodeBarre.getText());
+            clean();
+        }
+        buttonSupprimer.setBackground(Color.GREEN);
     }//GEN-LAST:event_buttonSupprimerActionPerformed
 
-    private void buttonTerminerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonTerminerActionPerformed
-        try {
-            this.parent.afficherLog(
-                    this.controleur.creer(this.parent.getFacture())
-                            .toString());
-        }
-        catch (DonneesInsuffisantesException ex) {
-            this.parent.afficherErreur(ex);}
-         buttonTerminer.setBackground(Color.GREEN);
+    private void buttonSuivantActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSuivantActionPerformed
+        this.parent.selectionnerPersonne();
+         buttonSuivant.setBackground(Color.GREEN);
          
-    }//GEN-LAST:event_buttonTerminerActionPerformed
+    }//GEN-LAST:event_buttonSuivantActionPerformed
 
     private void fieldCodeBarreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fieldCodeBarreActionPerformed
         // TODO add your handling code here:
@@ -253,9 +244,35 @@ public class critVente extends javax.swing.JPanel {
         String typeDev;
         
         if (f instanceof ProduitForm) {
-            //this.ligneFacture = null;
             this.produitExamine = (ProduitForm) f;
             
+            typeJeu = ("Jeu".equals(this.produitExamine.getType()));
+            if (typeJeu) {
+                typeDev = "Développeur : ";
+                this.labelPlateforme.setText("Plateforme : " + this.produitExamine.getPlateforme());
+            }
+            else
+                typeDev = "Fabricant : ";
+            this.fieldCodeBarre.setText(this.produitExamine.getCodeBarre());
+            this.labelDevFab.setText(typeDev + this.produitExamine.getEditeur());
+            this.labelNom.setText("Nom : " + this.produitExamine.getNom());
+            this.labelEdition.setText("Edition : " + this.produitExamine.getEdition());
+            this.labelZone.setText("Zone : " + this.produitExamine.getZone());
+            this.labelPrix.setText("Prix : " + this.produitExamine.getPrix() + " €");
+            this.labelStock.setText("Stock : " + this.produitExamine.getStock());
+
+            this.labelDevFab.setVisible(true);
+            this.labelNom.setVisible(true);
+            this.labelPlateforme.setVisible(typeJeu);
+            this.labelEdition.setVisible(true);
+            this.labelZone.setVisible(true);
+            this.labelPrix.setVisible(true);
+            this.labelStock.setVisible(true);
+        }
+        else if (f instanceof FactureLigneForm)
+        {
+            setForm(((FactureLigneForm) f).getProduit());
+            this.fieldQuantite.getModel().setValue(((FactureLigneForm) f).getQuantite());
         }
         else
             throw new IllegalArgumentException("Erreur dans menuProduit: le formulaire à sélectionner n'est pas un ProduitForm ou un FactureLigneForm.");
@@ -282,8 +299,11 @@ public class critVente extends javax.swing.JPanel {
         this.labelPrix.setVisible(true);
         this.labelStock.setVisible(true);
     }
-    private FactureLigneForm toForm()
+    private FactureLigneForm toForm() throws Exception
     {
+        if (this.produitExamine == null)
+            throw new Exception("Veuillez sélectionner un produit");
+        
         FactureLigneForm retour = new FactureLigneForm();
         retour.setProduit(this.produitExamine);
         int q = (((SpinnerNumberModel) this.fieldQuantite.getModel()).getNumber().intValue());
@@ -296,8 +316,8 @@ public class critVente extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonAjouter;
     private javax.swing.JButton buttonChercher;
+    private javax.swing.JButton buttonSuivant;
     private javax.swing.JButton buttonSupprimer;
-    private javax.swing.JButton buttonTerminer;
     private javax.swing.JFormattedTextField fieldCodeBarre;
     private javax.swing.JSpinner fieldQuantite;
     private javax.swing.JLabel labelCodeBarre;

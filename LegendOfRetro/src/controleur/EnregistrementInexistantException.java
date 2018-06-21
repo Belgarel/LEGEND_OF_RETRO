@@ -7,11 +7,11 @@ package controleur;
 
 /**
  *
- * @author Adrien Marchand
+ * @author Home
  */
-public class InitException extends Exception
-{
-    public InitException(String erreur)
+public class EnregistrementInexistantException extends Exception {
+
+    public EnregistrementInexistantException(String erreur)
     {
         super(erreur);
     }

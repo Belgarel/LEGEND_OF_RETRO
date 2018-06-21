@@ -12,6 +12,10 @@ import controleur.Controleur;
 import controleur.DonneeInvalideException;
 import controleur.DonneesInsuffisantesException;
 import controleur.EnregistrementExistantException;
+import controleur.EnregistrementInexistantException;
+import controleur.ResultatInvalideException;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,12 +26,13 @@ import java.util.logging.Logger;
  */
 public class critProduit extends javax.swing.JPanel
 {
-    private Form selectedForm;
+    private ProduitForm selectedForm;
     private Controleur controleur;
     private Chercheur parent;
     
     private int idVersionJeu;
     private int idVersionConsole;
+    private String urlPhotoJeu;
 
     /**
      * Creates new form Resultat
@@ -39,7 +44,7 @@ public class critProduit extends javax.swing.JPanel
         this.controleur = controleur;
         this.parent = parent;
         this.selectedForm = null;
-        initComponents();
+        initComponents(); 
         
         Vector<String> zones = controleur.listeZones();
         zones.add(0, "");
@@ -49,6 +54,8 @@ public class critProduit extends javax.swing.JPanel
         Vector<String> plateformes = controleur.listeConsoles();
         plateformes.add(0, "");
         listePlateforme.setModel(new javax.swing.DefaultComboBoxModel<>(plateformes));
+        
+        labelPhoto.setVisible(false);
         
         this.idVersionJeu = -1;
         this.idVersionConsole = -1;
@@ -80,8 +87,8 @@ public class critProduit extends javax.swing.JPanel
         labelPrix = new javax.swing.JLabel();
         labelStock = new javax.swing.JLabel();
         labelCasse = new javax.swing.JLabel();
-        fieldCasse1 = new javax.swing.JLabel();
-        fieldCasse2 = new javax.swing.JLabel();
+        labelDescription = new javax.swing.JLabel();
+        labelPhoto = new javax.swing.JLabel();
         labelCurrency = new javax.swing.JLabel();
         labelCote = new javax.swing.JLabel();
         fieldCote = new javax.swing.JLabel();
@@ -98,6 +105,7 @@ public class critProduit extends javax.swing.JPanel
         jTextAreaDescription = new javax.swing.JTextArea();
         fieldPrix = new javax.swing.JFormattedTextField();
         fieldStock = new javax.swing.JFormattedTextField();
+        titre = new javax.swing.JLabel();
 
         setName("critResultat"); // NOI18N
 
@@ -106,18 +114,8 @@ public class critProduit extends javax.swing.JPanel
         labelZone.setText("Zone : ");
 
         fieldNom.setToolTipText("Nom");
-        fieldNom.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                fieldNomKeyPressed(evt);
-            }
-        });
 
         fieldEditeur.setToolTipText("Developpeur / Fabricant");
-        fieldEditeur.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                fieldEditeurActionPerformed(evt);
-            }
-        });
 
         labelNom.setText("Nom : ");
         labelNom.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
@@ -140,10 +138,12 @@ public class critProduit extends javax.swing.JPanel
         });
 
         labelTag.setText("Tag : ");
+        labelTag.setVisible(false);
 
         fieldEdition.setToolTipText("Edition");
 
         fieldTag.setToolTipText("Tag");
+        fieldTag.setVisible(false);
 
         listePlateforme.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "PC", "PS", " " }));
         listePlateforme.setVisible(false);
@@ -164,15 +164,17 @@ public class critProduit extends javax.swing.JPanel
 
         labelCasse.setText("Casse :");
 
-        fieldCasse1.setText("Description :");
-        fieldCasse1.setVerticalAlignment(javax.swing.SwingConstants.TOP);
-        fieldCasse1.setVerticalTextPosition(javax.swing.SwingConstants.TOP);
+        labelDescription.setText("Description :");
+        labelDescription.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        labelDescription.setVerticalTextPosition(javax.swing.SwingConstants.TOP);
+        labelDescription.setVisible(false);
 
-        fieldCasse2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        fieldCasse2.setText("Photo :");
-        fieldCasse2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-        fieldCasse2.setEnabled(false);
-        fieldCasse2.setFocusable(false);
+        labelPhoto.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        labelPhoto.setText("Photo :");
+        labelPhoto.setToolTipText("");
+        labelPhoto.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        labelPhoto.setEnabled(false);
+        labelPhoto.setFocusable(false);
 
         labelCurrency.setText("€");
 
@@ -202,12 +204,6 @@ public class critProduit extends javax.swing.JPanel
             }
         });
 
-        fieldCodeBarre.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                fieldCodeBarreActionPerformed(evt);
-            }
-        });
-
         buttonChercher.setText("Chercher");
         buttonAjoutZone.setVisible(false);
         buttonChercher.addActionListener(new java.awt.event.ActionListener() {
@@ -217,7 +213,6 @@ public class critProduit extends javax.swing.JPanel
         });
 
         buttonNouveau.setText("Nouveau");
-        buttonNouveau.setVisible(false);
         buttonNouveau.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonNouveauActionPerformed(evt);
@@ -225,7 +220,6 @@ public class critProduit extends javax.swing.JPanel
         });
 
         buttonModifier.setText("Modifier");
-        buttonModifier.setVisible(false);
         buttonModifier.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonModifierActionPerformed(evt);
@@ -234,91 +228,103 @@ public class critProduit extends javax.swing.JPanel
 
         jTextAreaDescription.setColumns(20);
         jTextAreaDescription.setRows(5);
+        jTextAreaDescription.setVisible(false);
         jScrollPane1.setViewportView(jTextAreaDescription);
 
         fieldPrix.setText("0");
 
         fieldStock.setText("0");
 
+        titre.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        titre.setText("Produit");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(labelCategorie)
-                        .addComponent(labelPlateforme, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGroup(layout.createSequentialGroup()
-                            .addGap(12, 12, 12)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addComponent(labelNom)
-                                .addComponent(fieldDevFab)
-                                .addComponent(labelZone)
-                                .addComponent(labelEdition)))
-                        .addComponent(buttonChercher, javax.swing.GroupLayout.Alignment.TRAILING))
-                    .addComponent(labelCodeBarre))
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(65, 65, 65)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(buttonNouveau)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(buttonModifier))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(139, 139, 139)
-                                .addComponent(fieldTxtAjoutZone, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(38, 38, 38)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(listeCategorie, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(fieldCodeBarre, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(fieldNom, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(fieldEditeur, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(listeZone, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(fieldEdition, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(listePlateforme, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(buttonAjoutZone)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(labelTag)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(fieldTag, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(labelCasse)
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(labelPrix)
-                                .addComponent(labelStock)
-                                .addComponent(labelCote)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(labelCategorie)
+                                .addComponent(labelPlateforme, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(layout.createSequentialGroup()
+                                    .addGap(12, 12, 12)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(labelNom)
+                                        .addComponent(fieldDevFab)
+                                        .addComponent(labelZone)
+                                        .addComponent(labelEdition)))
+                                .addComponent(buttonChercher, javax.swing.GroupLayout.Alignment.TRAILING))
+                            .addComponent(labelCodeBarre))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(fieldCasse)
-                                .addGap(43, 43, 43)
-                                .addComponent(fieldAjoutCasse, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(65, 65, 65)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(buttonNouveau)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(buttonModifier))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGap(139, 139, 139)
+                                        .addComponent(fieldTxtAjoutZone, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE))))
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(fieldPrix, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(38, 38, 38)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(listeCategorie, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(fieldCodeBarre, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(fieldNom, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(fieldEditeur, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(listeZone, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(fieldEdition, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(listePlateforme, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(buttonAjoutZone)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(labelTag)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(labelCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(fieldCote)
-                            .addComponent(fieldStock, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(fieldCasse2, javax.swing.GroupLayout.PREFERRED_SIZE, 226, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(fieldCasse1)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 227, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(10, 10, 10))
+                                .addComponent(fieldTag, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(labelCasse)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(labelPrix)
+                                        .addComponent(labelStock)
+                                        .addComponent(labelCote)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(fieldCasse)
+                                        .addGap(43, 43, 43)
+                                        .addComponent(fieldAjoutCasse, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(fieldPrix, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(labelCurrency, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(fieldCote)
+                                    .addComponent(fieldStock, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(labelPhoto, javax.swing.GroupLayout.PREFERRED_SIZE, 226, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(labelDescription)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 227, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(titre)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(titre)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 14, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(14, 14, 14)
+                        .addGap(3, 3, 3)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -371,18 +377,18 @@ public class critProduit extends javax.swing.JPanel
                             .addComponent(listePlateforme, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(labelPlateforme))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(buttonChercher)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(buttonNouveau)
-                            .addComponent(buttonModifier)))
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(buttonChercher)
+                                .addComponent(buttonModifier))))
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(fieldCasse2, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(labelPhoto, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(fieldCasse1)
+                        .addComponent(labelDescription)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         getAccessibleContext().setAccessibleName("critResultat");
@@ -395,22 +401,29 @@ public class critProduit extends javax.swing.JPanel
             fieldDevFab.setText("Développeur :"); 
             labelPlateforme.setVisible(true);
             listePlateforme.setVisible(true);
+            labelTag.setVisible(true);
+            fieldTag.setVisible(true);
+            labelPhoto.setVisible(true);
+            labelDescription.setVisible(true);
+            jTextAreaDescription.setVisible(true);
         }
         else 
         { 
             fieldDevFab.setText("Fabricant : ");
             labelPlateforme.setVisible(false);
             listePlateforme.setVisible(false);
+            labelTag.setVisible(false);
+            fieldTag.setVisible(false);
+            labelPhoto.setVisible(false);
+            labelDescription.setVisible(false);
+            jTextAreaDescription.setVisible(false);
         }
+        clean(); //réinitialisation des champs
     }//GEN-LAST:event_listeCategorieItemStateChanged
 
     private void listePlateformeItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_listePlateformeItemStateChanged
         // TODO add your handling code here:
     }//GEN-LAST:event_listePlateformeItemStateChanged
-
-    private void fieldEditeurActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fieldEditeurActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_fieldEditeurActionPerformed
 
     private void buttonAjoutZoneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonAjoutZoneActionPerformed
         try {
@@ -446,10 +459,10 @@ public class critProduit extends javax.swing.JPanel
     private void buttonNouveauActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonNouveauActionPerformed
         try {
             Form f = this.toForm();
-            if (f instanceof CodeBarreForm)
-                this.parent.afficherLog(this.controleur.creer((CodeBarreForm) f).toString());
-            else if (f instanceof ProduitForm)
-                this.parent.afficherLog(this.controleur.creer((ProduitForm) f).toString());
+            //controleur.creer(CodeBarreForm) lance une exception si le form n'est pas un ProduitForm.
+            this.parent.afficherLog(this.controleur.creer((CodeBarreForm) f).toString());
+            //exécuté seulement si le form est un ProduitForm
+            this.selectedForm = (ProduitForm) f;
             
             /*
             *  Refresh la liste Platforme après Ajout
@@ -459,25 +472,31 @@ public class critProduit extends javax.swing.JPanel
             plateformes.add(0, "");
             listePlateforme.setModel(new javax.swing.DefaultComboBoxModel<>(plateformes));
         }
-        catch (DonneeInvalideException ex) {
+        catch (DonneeInvalideException | DonneesInsuffisantesException |
+                EnregistrementExistantException | ResultatInvalideException ex) {
             this.parent.afficherErreur(ex);}
-        catch (DonneesInsuffisantesException ex) {
-            this.parent.afficherErreur(ex);}
-        catch (EnregistrementExistantException ex) {
-            this.parent.afficherErreur(ex);
-        }
     }//GEN-LAST:event_buttonNouveauActionPerformed
 
     private void buttonModifierActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonModifierActionPerformed
-        throw new UnsupportedOperationException("La modification de produit n'a pas encore été implémentée.");
+        try {
+            Form f = toForm();
+            if (!(f instanceof ProduitForm))
+                throw new DonneesInsuffisantesException(
+                        "Erreur : on ne peut pas effacer toutes ces données sur le produit");
+            this.parent.afficherLog(
+                    this.controleur.modifier((ProduitForm) f).toString());
+            this.selectedForm = (ProduitForm) f;
+            setForm(this.selectedForm); //update affichage dans critProduit (normalement inutile)
+        }
+        catch (DonneesInsuffisantesException ex) {this.parent.afficherErreur(ex);}
+        catch (DonneeInvalideException ex) {this.parent.afficherErreur(ex);}
+        catch (EnregistrementInexistantException ex) {this.parent.afficherErreur(ex);} catch (IOException ex) {
+            Logger.getLogger(critProduit.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }//GEN-LAST:event_buttonModifierActionPerformed
 
-    private void fieldCodeBarreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fieldCodeBarreActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_fieldCodeBarreActionPerformed
-
     private void listeZoneItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_listeZoneItemStateChanged
-        // TODO add your handling code here:
         if ("Autre".equals((String)listeZone.getSelectedItem())) 
         {
             fieldTxtAjoutZone.setVisible(true); 
@@ -490,27 +509,73 @@ public class critProduit extends javax.swing.JPanel
         }
     }//GEN-LAST:event_listeZoneItemStateChanged
 
-    private void fieldNomKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_fieldNomKeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_fieldNomKeyPressed
-
     private void listePlateformeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_listePlateformeActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_listePlateformeActionPerformed
 
+    public void clean()
+    {
+        this.fieldAjoutCasse.setValue(0);
+        this.fieldCodeBarre.setText("");
+        this.fieldEditeur.setText("");
+        this.fieldEdition.setText("");
+        this.fieldNom.setText("");
+        this.fieldPrix.setValue(String.format("%.2f", 0.0f));
+        this.fieldStock.setText("0");
+        this.fieldCote.setText(String.format("%.2f", 0.0f));
+        this.fieldTag.setText("");
+        this.fieldTxtAjoutZone.setText("");
+        this.labelPhoto.setIcon(null);
+        this.jTextAreaDescription.setText("");
+        this.listePlateforme.setSelectedIndex(0);
+        this.listeZone.setSelectedIndex(0);
+        this.selectedForm = null;
+        this.idVersionConsole = -1;
+        this.idVersionJeu = -1;
+        parent.lancerRecherche(null);
+    }
     public void setCodeBarre(String cb)
     {
         this.fieldCodeBarre.setText(cb);
     }
-    public void setForm(ProduitForm f)
+    
+    /********
+    *
+    *   Fonction utilisé pour remplir les champs dans le menu
+    *   @param ProduitForm f
+    *   @return void ( le remplissage se fait directement par le menu )
+    * 
+    *********/
+    public void setForm(ProduitForm f) throws MalformedURLException, IOException
     {
         this.selectedForm = f;
+        String errors = "";
         
-        if ("jeu".equals(f.getType()))
+        if ("Jeu".equals(f.getType()))
         {
             this.listeCategorie.setSelectedIndex(1); //type Jeu
             this.fieldTag.setText(f.getTags());
             this.jTextAreaDescription.setText(f.getDescription());
+            //plateforme
+            int i=0;
+            boolean found = false;
+            String dansListe = null;
+            String plateforme = f.getPlateforme();
+            while (!found && i < listePlateforme.getModel().getSize())
+            {
+                dansListe = listePlateforme.getModel().getElementAt(i);
+                found = plateforme.equals(dansListe);
+                i++;
+            }
+            if (found)
+                listePlateforme.getModel().setSelectedItem(dansListe);
+            else
+                errors = errors.concat("Erreur lors de la sélection de la plateforme " + plateforme
+                        + " : plateforme non trouvée dans la liste déroulante. \n");
+            
+            //Affichage photo dans le cadre          
+            if (f.getPhoto()!="") { controleur.setPhotoProduct(f.getPhoto()); }
+            
         }
         else if ("console".equals(f.getType()))
             this.listeCategorie.setSelectedIndex(0); //type Console
@@ -519,29 +584,56 @@ public class critProduit extends javax.swing.JPanel
         this.fieldNom.setText(f.getNom());
         this.fieldEditeur.setText(f.getEditeur());
         this.fieldEdition.setText(f.getEdition());
-        this.fieldPrix.setText(String.valueOf(f.getPrix()));
+        this.fieldPrix.setText(String.valueOf(String.format("%.2f", f.getPrix())));
         this.fieldStock.setText(String.valueOf(f.getStock()));
+        this.fieldCote.setText(String.valueOf(String.format("%.2f", f.getCote())));
+    
+        //zone
+        int i = 0;
+        boolean found = false;
+        String dansListe = null;
+        String zone = f.getZone();
+        while (!found && i < listeZone.getModel().getSize())
+        {
+            dansListe = listeZone.getModel().getElementAt(i);
+            found = zone.equals(dansListe);
+            i++;
+        }
+        if (found)
+            listeZone.getModel().setSelectedItem(dansListe);
+        else
+            errors = errors.concat("Erreur lors de la sélection de la zone " + zone
+                    + " : zone non trouvée dans la liste déroulante. \n");
                 
         
         this.idVersionJeu = f.getIdVersionJeu();
         this.idVersionConsole = f.getIdVersionConsole();
-        
-        //TODO: à terminer (zones, plateformes... D'ailleurs, celles-ci doivent être initialisées proprement !)
+
+        if (!"".equals(errors))
+            this.parent.afficherErreur(new Exception(errors));
+
     }
+    
+    /********
+    *
+    *   Fonction utilisé pour récupérer les champs dans le menu
+    *   @param void
+    *   @return Form ( récupération tous les champs remplis dans le menu et popularise le form avec.
+    * 
+    *********/
     private Form toForm() throws DonneeInvalideException
     {
         float prix = 0f;
+        float cote = 0f;
         int stock = 0;
         try {
             prix = Float.valueOf(fieldPrix.getText());
             stock = Integer.valueOf(fieldStock.getText());}
         catch (NumberFormatException nfe) {
             if (!"".equals(fieldPrix.getText()))
-                throw new DonneeInvalideException("Erreur : veuillez saisir le 'prix' en notation anglo-saxonne (par exemple : 2.5");
-            if (!"".equals(Integer.valueOf(fieldStock.getText())))
+                throw new DonneeInvalideException("Erreur : veuillez saisir le 'prix' en notation anglo-saxonne (par exemple : 2.5)");
+            if (!"".equals(fieldStock.getText()))
                 throw new DonneeInvalideException("Erreur : veuillez saisir un entier dans le champ 'stock'");
-            //prix = 0f;
-            //stock = 0;
         }
             
         if("".equals(fieldNom.getText()) && "".equals(fieldEditeur.getText())
@@ -549,14 +641,27 @@ public class critProduit extends javax.swing.JPanel
                 && "".equals(fieldEdition.getText()) && "".equals(fieldTag.getText()))
             return new CodeBarreForm(fieldCodeBarre.getText());
         else
-            return new ProduitForm(this.idVersionConsole, this.idVersionJeu,
-                    (String) listeCategorie.getSelectedItem(), fieldCodeBarre.getText(),
-                    fieldNom.getText(), fieldEdition.getText(),
-                    (String) listeZone.getSelectedItem(),
-                    fieldEditeur.getText(), jTextAreaDescription.getText(),
-                    fieldTag.getText(), (String) listePlateforme.getSelectedItem(),
-                    prix, stock);
+        {
+            ProduitForm retour = new ProduitForm();
+            retour.setIdVersionConsole(this.idVersionConsole);
+            retour.setIdVersionJeu(this.idVersionJeu);
+            retour.setType((String) listeCategorie.getSelectedItem());
+            retour.setCodeBarre(fieldCodeBarre.getText());
+            retour.setNom(fieldNom.getText());
+            retour.setEdition(fieldEdition.getText());
+            retour.setZone((String) listeZone.getSelectedItem());
+            retour.setEditeur(fieldEditeur.getText());
+            retour.setPhoto("");
+            retour.setDescription(jTextAreaDescription.getText());
+            retour.setTags(fieldTag.getText());
+            retour.setPlateforme((String) listePlateforme.getSelectedItem());
+            retour.setPrix(prix);
+            retour.setStock(stock);
+            retour.setCote(cote);
+            return retour;
+        }
     }
+    
     
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -566,8 +671,6 @@ public class critProduit extends javax.swing.JPanel
     public static javax.swing.JButton buttonNouveau;
     public static javax.swing.JSpinner fieldAjoutCasse;
     public static javax.swing.JLabel fieldCasse;
-    public static javax.swing.JLabel fieldCasse1;
-    public static javax.swing.JLabel fieldCasse2;
     public static javax.swing.JFormattedTextField fieldCodeBarre;
     public static javax.swing.JLabel fieldCote;
     public static javax.swing.JLabel fieldDevFab;
@@ -585,8 +688,10 @@ public class critProduit extends javax.swing.JPanel
     public static javax.swing.JLabel labelCodeBarre;
     public static javax.swing.JLabel labelCote;
     public static javax.swing.JLabel labelCurrency;
+    public static javax.swing.JLabel labelDescription;
     public static javax.swing.JLabel labelEdition;
     public static javax.swing.JLabel labelNom;
+    public static javax.swing.JLabel labelPhoto;
     public static javax.swing.JLabel labelPlateforme;
     public static javax.swing.JLabel labelPrix;
     public static javax.swing.JLabel labelStock;
@@ -595,6 +700,7 @@ public class critProduit extends javax.swing.JPanel
     public static javax.swing.JComboBox<String> listeCategorie;
     public static javax.swing.JComboBox<String> listePlateforme;
     public static javax.swing.JComboBox<String> listeZone;
+    public static javax.swing.JLabel titre;
     // End of variables declaration//GEN-END:variables
 
 }

@@ -5,14 +5,13 @@
  */
 package bean;
 
-import java.util.Vector;
-
 /**
  *
  * @author Adrien Marchand
  */
-public class PromoForm extends Form
+public class PromoForm extends ProduitForm
 {
+    private int idPromo;
     private int idVersionConsole;
     private int idVersionJeu;
     
@@ -22,34 +21,42 @@ public class PromoForm extends Form
     private String edition;
     private String zone;
     private String editeur;
+    private String photo;
     private String description;
     private String tags;
     private String plateforme;
+    private float prixbase;
     private float prix;
     private int stock;
+    private float cote;
     
     public PromoForm()
     {
-        this.idVersionConsole = -1;
-        this.idVersionJeu = -1;
+        this.idPromo = 0;
+        this.idVersionConsole = 0;
+        this.idVersionJeu = 0;
         this.type = "";
         this.nom = "";
         this.edition = "";
         this.zone = "";
         this.editeur = "";
+        this.photo = "";
         this.description = "";
         this.tags = "";
-        this.prix = -1;
-        this.stock = -1;
+        this.prixbase = 0.2f;
+        this.prix = 0.2f;
+        this.stock = 0;
+        this.cote = 0.2f;
     }
     public PromoForm(
-            int idVersionConsole, int idVersionJeu,
+            int idPromo, int idVersionConsole, int idVersionJeu,
             String type, String cb, String nom, String edition, String zone,
-            String editeur, String description, String tags, String plateforme,
-            float prix, int stock)
+            String editeur,String photo, String description, String tags, String plateforme,
+            float prixbase, float prix, int stock, float cote)
     {
         super();
         this.cb = cb;
+        this.idPromo = idPromo;
         this.idVersionConsole = idVersionConsole;
         this.idVersionJeu = idVersionJeu;
         this.type = type;
@@ -57,13 +64,17 @@ public class PromoForm extends Form
         this.edition = edition;
         this.zone = zone;
         this.editeur = editeur;
+        this.photo = photo;
         this.description = description;
         this.plateforme = plateforme;
         this.tags = tags;
+        this.prixbase = prixbase;
         this.prix = prix;
         this.stock = stock;
+        this.cote = cote;
     }
     
+    public int getIdPromo()      { return this.idPromo; }
     public int getIdVersionConsole()      {return this.idVersionConsole;}
     public int getIdVersionJeu()      {return this.idVersionJeu;}
     public String getType()      {return this.type;}
@@ -72,12 +83,16 @@ public class PromoForm extends Form
     public String getEdition()      {return this.edition;}
     public String getZone()      {return this.zone;}
     public String getEditeur()      {return this.editeur;}
+    public String getPhoto()        {return this.photo;}
     public String getDescription()      {return this.description;}
     public String getTags()      {return this.tags;}
     public String getPlateforme()      {return this.plateforme;}
+    public float getPrixBase()   { return this.prixbase; }
     public float getPrix()      {return this.prix;}
     public int getStock()      {return this.stock;}
+    public float getCote()      {return this.cote;}
     
+    public void setIdPromo(int idPromo)      { this.idPromo = idPromo; }
     public void setIdVersionConsole(int id)      {this.idVersionConsole = id;}
     public void setIdVersionJeu(int id)      {this.idVersionJeu = id;}
     public void setType(String type)      {this.type = type;}
@@ -85,10 +100,13 @@ public class PromoForm extends Form
     public void setEdition(String edition)      {this.edition = edition;}
     public void setZone(String zone)      {this.zone = zone;}
     public void setEditeur(String editeur)      {this.editeur = editeur;}
+    public void setPhoto(String photo)          {this.photo = photo;}
     public void setDescription(String descr)      {this.description = descr;}
     public void setTags(String tags)      {this.tags = tags;}
     public void setPlateforme(String pf)      {this.plateforme = pf;}
+    public void setPrixBase(float prixbase)    {this.prixbase = prixbase; }
     public void setPrix(float p)      {this.prix = p;}
     public void setStock(int n)      {this.stock = n;}
+    public void setCote(float c)     {this.cote = c; }
     
 }

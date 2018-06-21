@@ -15,7 +15,8 @@ public class Rapport
 {
     public enum Table {FABRICANT, CONSOLE, ZONE,
             VERSIONCONSOLE, VERSIONJEU, JEU, EDITEUR, TAG, DESCRIPTION,
-            FACTURE, LIGNEFACTUREJEU, LIGNEFACTURECONSOLE};
+            FACTURE, LIGNEFACTUREJEU, LIGNEFACTURECONSOLE,
+            PERSONNE, VILLE, PAYS, PROMOCONSOLE, PROMOJEU};
     public enum Operation {CREER, MODIFIER};
     
     private int idDerniereOperation;
@@ -70,7 +71,6 @@ public class Rapport
                 ret = ret.concat("Ajout");
             else if (this.operations.elementAt(i) == Operation.MODIFIER)
                 ret = ret.concat("Modification");
-            System.out.println(this.tables.elementAt(i));
             if (this.tables.elementAt(i) == Table.DESCRIPTION)
                 ret = ret.concat(" d'un lien entre un jeu et le tag ");
             else
@@ -93,7 +93,19 @@ public class Rapport
                     ret = ret.concat(" de la zone ");
                 else if (this.tables.elementAt(i) == Table.FACTURE)
                     ret = ret.concat(" de la facture ");
+                else if (this.tables.elementAt(i) == Table.LIGNEFACTURECONSOLE
+                        || this.tables.elementAt(i) == Table.LIGNEFACTUREJEU)
                     ret = ret.concat(" de la ligne de facture ");
+                else if (this.tables.elementAt(i) == Table.PAYS)
+                    ret = ret.concat(" du pays ");
+                else if (this.tables.elementAt(i) == Table.VILLE)
+                    ret = ret.concat(" dde la ville ");
+                else if (this.tables.elementAt(i) == Table.PERSONNE)
+                    ret = ret.concat(" du client/fourn ");
+                else if (this.tables.elementAt(i) == Table.PROMOCONSOLE)
+                    ret = ret.concat(" du Promo Console ");
+                else if (this.tables.elementAt(i) == Table.PROMOJEU)
+                    ret = ret.concat(" du PromoJeu ");
             }
             ret = ret.concat("id "+this.ids.elementAt(i) + ".\n");
         }

@@ -5,13 +5,12 @@
  */
 package vue;
 
+import bean.FactureLigneForm;
 import bean.Form;
+import bean.PersonneForm;
 import bean.ProduitForm;
 import bean.PromoForm;
-import controleur.Rapport;
-import java.util.Arrays;
 import java.util.Vector;
-import javax.swing.JPanel;
 
 /**
  *
@@ -33,12 +32,22 @@ public class Resultat <F extends Form> extends javax.swing.JPanel
         "Edition",
         "Zone",
         "Fabricant"};
+    protected static String [] typePersonne = {
+        "Nom",
+        "Prénom",
+        "Date naissance",
+        "Ville",
+        "Téléphone"};
     protected static String [] typePromo = {
         "Code Barre",
         "Nom",
         "Edition",
         "Zone",
         "Fabricant"};
+    protected static String [] typeFactureLigneForm = {
+        "Nom",
+        "Quantité choisie",
+        "Prix" };
     
 
     /**
@@ -49,6 +58,8 @@ public class Resultat <F extends Form> extends javax.swing.JPanel
     {
         this.parent = parent;
         initComponents();
+        
+        //System.out.println(critProduit.getHeight());
         
         //destruction du tableau par défaut
         this.table.setModel(new javax.swing.table.DefaultTableModel(
@@ -85,15 +96,11 @@ public class Resultat <F extends Form> extends javax.swing.JPanel
                 "Code Barre", "Nom", "Quantité disponible", "Developpeur", "Date de sortie", "Plus Infos"
             }
         ));
+        table.setFillsViewportHeight(true);
         table.setShowVerticalLines(false);
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tableMouseClicked(evt);
-            }
-        });
-        table.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyTyped(java.awt.event.KeyEvent evt) {
-                tableKeyTyped(evt);
             }
         });
         jScrollPane1.setViewportView(table);
@@ -105,7 +112,7 @@ public class Resultat <F extends Form> extends javax.swing.JPanel
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 976, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 926, Short.MAX_VALUE)
                     .addComponent(verbose, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -115,8 +122,8 @@ public class Resultat <F extends Form> extends javax.swing.JPanel
                 .addContainerGap()
                 .addComponent(verbose)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 303, Short.MAX_VALUE)
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -128,10 +135,6 @@ public class Resultat <F extends Form> extends javax.swing.JPanel
         if (0 <= rowIndex && rowIndex < this.res.size()) //this.res n'est normalement pas nul
             this.parent.selectionnerResultat(res.elementAt(rowIndex));
     }//GEN-LAST:event_tableMouseClicked
-
-    private void tableKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tableKeyTyped
-        // TODO add your handling code here:
-    }//GEN-LAST:event_tableKeyTyped
     
     //important : il est nécessaire que le vecteur contienne des données de type HOMOGENE (autrement dit, pas des formulaires différents. TODO: tester ça ?
     public void afficherRes(Vector<F> res)
@@ -139,7 +142,10 @@ public class Resultat <F extends Form> extends javax.swing.JPanel
         this.res = res;
         //Affichage du nombre de résultats
         if (this.res.size() == 0)
+        {
             afficherErreur("Aucun résultat.");
+            this.table.setModel(new javax.swing.table.DefaultTableModel());
+        }
         else if (this.res.size() > 0)
         {
             afficherMessage(this.res.size() + " résultats.");
@@ -200,6 +206,44 @@ public class Resultat <F extends Form> extends javax.swing.JPanel
                     rowIndex++;
                 }
             }
+            else if (test instanceof FactureLigneForm)
+            {
+               
+                nomsChamps = typeFactureLigneForm;
+                rowIndex = 0;
+                //on remplit le tableau ligne à ligne
+                for (Form f : this.res)
+                {
+                    FactureLigneForm pf = (FactureLigneForm) f;
+                    Object[] donneesLigne = {
+                        pf.getProduit().getNom(),
+                        pf.getQuantite(),
+                        pf.getPrixLigne()
+                    };
+                    donnees[rowIndex] = donneesLigne;
+                    rowIndex++;
+                }  
+            }
+            else if (test instanceof PersonneForm)
+            {
+               
+                nomsChamps = typePersonne;
+                rowIndex = 0;
+                //on remplit le tableau ligne à ligne
+                for (Form f : this.res)
+                {
+                    PersonneForm pf = (PersonneForm) f;
+                    Object[] donneesLigne = {
+                        pf.getNom(),
+                        pf.getPrenom(),
+                        pf.getDateNaissance(),
+                        pf.getVille() + " (" + pf.getPays() + ")",
+                        pf.getTelephone()
+                    };
+                    donnees[rowIndex] = donneesLigne;
+                    rowIndex++;
+                }
+            }
             else
                 throw new UnsupportedOperationException("Erreur lors de l'affichage du résultat : le type du formulaire est inconnu");
             // Affectation les resultats au Jtable
@@ -222,6 +266,8 @@ public class Resultat <F extends Form> extends javax.swing.JPanel
         this.verbose.setForeground(new java.awt.Color(3, 143, 10));
         this.verbose.setText(message);
     }
+    
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     public static javax.swing.JScrollPane jScrollPane1;
